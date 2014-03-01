@@ -118,12 +118,13 @@ class Curl_Client {
             $this->setUrlInfo($request_url);
             $url_info = $this->getUrlInfo();
             $host = $url_info['host'];
-            $basic_user = $url_info['user'];
-            $basic_pass = $url_info['pass'];
 
-            if($basic_user != '' && $basic_pass != '') {
+            if(isset($url_info['user'])
+                        && isset($url_info['pass'])
+                        && !empty($url_info['user'])
+                        && !empty($url_info['pass'])) {
 
-                $basic_code = $basic_user .':'. $basic_pass;
+                $basic_code = $url_info['user'] .':'. $url_info['pass'];
                 $this->setBasicCode($host, $basic_code);
                 $request_url = str_replace('://'. $basic_code .'@', '://', $request_url);
 
@@ -156,7 +157,6 @@ class Curl_Client {
         curl_exec($ch);
         $curl_info = curl_getinfo($ch);
         $curl_content = curl_multi_getcontent($ch);
-        curl_close($ch);
         
         $url = $curl_info['url'];
         $code = $curl_info['http_code'];
@@ -171,7 +171,7 @@ class Curl_Client {
 
         );
 
-        $header_location = $headers['location'];
+        $header_location = (isset($headers['location'])) ? $headers['location'] : '';
 
         if($header_location == '' && $this->_meta_redirect_flag) {
 
@@ -198,6 +198,8 @@ class Curl_Client {
             }
 
         }
+
+        curl_close($ch);
 
     }
 
@@ -288,9 +290,15 @@ class Curl_Client {
 
     private function getUrlInfo($place='') {
 
-        if($place != '') {
+        if(!empty($place)) {
 
-            return $this->_parse_url[$place];
+            if(isset($this->_parse_url[$place])) {
+
+                return $this->_parse_url[$place];
+
+            }
+
+            return '';
 
         } else {
 
@@ -308,7 +316,13 @@ class Curl_Client {
 
     private function getBasicCode($host) {
 
-        return $this->_basic_info['H:'. $host];
+        if(isset($this->_basic_info['H:'. $host])) {
+
+            return $this->_basic_info['H:'. $host];
+
+        }
+
+        return '';
 
     }
     
@@ -339,8 +353,6 @@ class Curl_Client {
                 }
 
             }
-
-            $header_number++;
 
         }
 
@@ -378,12 +390,10 @@ class Curl_Client {
 
         }
 
-        $cookie_host = $this->getUrlInfo('host');
-
-        $expires = $cookie_contents['expires'];
-        $domain = $cookie_contents['domain'];
-        $path = $cookie_contents['path'];
-        $secure = intval($cookie_contents['secure']);
+        $expires = (isset($cookie_contents['expires'])) ? $cookie_contents['expires'] : '';
+        $domain = (isset($cookie_contents['domain'])) ? $cookie_contents['domain'] : '';
+        $path = (isset($cookie_contents['path'])) ? $cookie_contents['path'] : '';
+        $secure = (isset($cookie_contents['secure'])) ? $cookie_contents['secure'] : '';
         $cookie_name = $cookie_contents['argument']['name'];
         $argument_value = $cookie_contents['argument']['value'];
 
