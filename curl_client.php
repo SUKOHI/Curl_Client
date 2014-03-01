@@ -64,26 +64,26 @@ class Curl_Client {
 
     }
 
-    public function post($url, $params) {
+    public function post($url, $params, $file_flag=false) {
 
         $this->refreshOption();
         $this->_options[CURLOPT_POST] = true;
-        $this->_options[CURLOPT_POSTFIELDS] = $this->getPostData($params);
+        $this->_options[CURLOPT_POSTFIELDS] = $this->getPostData($params, $file_flag);
         $this->request($url);
 
     }
 
-    private function getPostData($datas) {
+    private function getPostData($datas, $file_flag) {
 
-        $returns = array();
+        if($file_flag) {
 
-        foreach($datas as $key => $value) {
+            return $datas;
 
-            $returns[] = $key .'='. urlencode($value);
+        } else {
+
+            return http_build_query($datas, '', '&');
 
         }
-
-        return implode('&', $returns);
 
     }
 
@@ -114,6 +114,7 @@ class Curl_Client {
 
         } else {
 
+            $request_url = $this->correctUrl($request_url);
             $this->setUrlInfo($request_url);
             $url_info = $this->getUrlInfo();
             $host = $url_info['host'];
@@ -208,7 +209,7 @@ class Curl_Client {
 
         }
 
-        $parse = parse_url($base_url);
+        $parse = @parse_url($base_url);
 
         if(preg_match('|^/.*$|', $relative_path)) {
 
@@ -281,7 +282,7 @@ class Curl_Client {
 
     private function setUrlInfo($url) {
 
-        $this->_parse_url = parse_url($url);
+        $this->_parse_url = @parse_url($url);
 
     }
 
@@ -363,7 +364,7 @@ class Curl_Client {
 
             if(preg_match($pattern_1, $cookie_data, $matches)) {
 
-                $name = $matches[1];
+                $name = strtolower($matches[1]);
                 $value = $matches[2];
                 $cookie_contents[$name] = $value;
 
@@ -533,6 +534,20 @@ class Curl_Client {
 
     }
     
+    private function correctUrl($url) {
+        
+        return str_replace(array(
+            
+            '&amp;'
+            
+        ), array(
+            
+            '&'
+            
+        ), $url);
+        
+    }
+    
 }
 
 /*** Sample Source
@@ -565,6 +580,17 @@ class Curl_Client {
     print_r($client->currentResponse());
     echo $client->currentResponse('body');
 
+[[File Upload]]
+
+    $file_absolute_path = realpath('file/file.pdf');
+    $client->post($url, array(
+
+        'file' => '@'. $file_absolute_path,     // => $_FILES['file']
+        'id' => 'user_id',                      // => $_POST['id']
+        'pass' => 'user_pass',                  // => $_POST['pass']
+
+    ), true);
+
 [[Get Cookie Values]]
 
     $cookies = $client->getCurrentCookies();
@@ -586,5 +612,3 @@ class Curl_Client {
     $client->removeCookie($domain, $path, $cookie_name);
 
 ***/
-
-?>
