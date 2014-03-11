@@ -68,20 +68,40 @@ class Curl_Client {
 
         $this->refreshOption();
         $this->_options[CURLOPT_POST] = true;
-        $this->_options[CURLOPT_POSTFIELDS] = $this->getPostData($params, $file_flag);
+        $this->_options[CURLOPT_POSTFIELDS] = $this->getPostParams($params, $file_flag);
         $this->request($url);
 
     }
 
-    private function getPostData($datas, $file_flag) {
+    private function getPostParams($params, $file_flag) {
 
         if($file_flag) {
 
-            return $datas;
+        	foreach ($params as $key => $param) {
+        		
+        		if(is_array($param)) {
+        			
+        			$array_params = $param;
+        			$array_params_count = count($array_params);
+        			
+        			for ($i = 0; $i < $array_params_count; $i++) {
+        				
+        				$array_param = $array_params[$i];
+        				$params[$key .'['. $i .']'] = $array_param;
+        				
+        			}
+        			
+        			unset($params[$key]);
+        			
+        		}
+        		
+        	}
+        	
+            return $params;
 
         } else {
 
-            return http_build_query($datas, '', '&');
+            return http_build_query($params, '', '&');
 
         }
 
