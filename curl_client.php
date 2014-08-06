@@ -239,8 +239,8 @@ class Curl_Client {
 
         } else {
 
-            $a = $this->getRealArray(split('/', $parse['path']));
-            $b = $this->getRealArray(split('/', $relative_path));
+            $a = $this->getRealArray(explode('/', $parse['path']));
+            $b = $this->getRealArray(explode('/', $relative_path));
 
             foreach($b as $v){
 
